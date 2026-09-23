@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Love, Death & Roll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120d08; --panel:#1c140c; --panel2:#241a10; --text:#e9dcc0; --muted:#a5906b;
+  --gold:#d4af37; --gold-bright:#f4d675; --border:#5a441f; --red:#8c2a2a; --red-bright:#e2543f; --green:#4c9a4c;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f2ead9; --panel:#fbf5e6; --panel2:#f1e6cc; --text:#2a1f10; --muted:#7a6440;
+    --gold:#a9791a; --gold-bright:#8a6408; --border:#c9b177; --red:#7a1f1f; --red-bright:#a12a2a; --green:#3a6b35; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'EB Garamond',Georgia,serif;display:flex;justify-content:center;
+  background-image:radial-gradient(ellipse at top,rgba(212,175,55,.08),transparent 60%);}
+#app{width:100%;max-width:480px;padding:22px 16px 36px;display:flex;flex-direction:column;gap:16px}
+.crest{display:flex;justify-content:center;margin-top:4px}
+h1{font-family:'Cinzel',Georgia,serif;font-size:1.5rem;text-align:center;margin:2px 0 0;letter-spacing:1px;
+  color:var(--gold-bright);text-shadow:0 0 14px rgba(212,175,55,.45);}
+.sub{text-align:center;color:var(--muted);font-size:.85rem;margin-top:-6px;font-style:italic}
+.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:2px solid var(--border);border-radius:10px;
+  padding:18px;box-shadow:0 0 0 1px rgba(212,175,55,.15) inset,0 8px 20px rgba(0,0,0,.35);
+  animation:fadeSlide .35s ease both;}
+label{display:block;font-family:'Cinzel',Georgia,serif;font-size:.72rem;letter-spacing:.6px;color:var(--muted);margin:12px 0 5px;text-transform:uppercase}
+input,select,textarea{width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,.25);color:var(--text);font-size:1rem;font-family:'EB Garamond',Georgia,serif}
+textarea{resize:vertical;font-family:monospace;font-size:.72rem}
+button{width:100%;padding:12px;border-radius:6px;border:1px solid var(--gold);
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#241a10;font-weight:700;
+  font-family:'Cinzel',Georgia,serif;letter-spacing:.5px;text-transform:uppercase;font-size:.9rem;cursor:pointer;margin-top:12px;
+  transition:transform .1s ease, box-shadow .2s ease;}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.4;cursor:default}
+button.secondary{background:transparent;color:var(--gold-bright);box-shadow:none}
+.names{display:flex;justify-content:space-between;font-family:'Cinzel',Georgia,serif;font-size:.85rem;color:var(--muted)}
+.names b{color:var(--text)}
+.die{text-align:center;font-family:'Cinzel',Georgia,serif;font-size:3rem;font-weight:700;color:var(--gold-bright);
+  margin:8px 0;text-shadow:0 0 10px rgba(212,175,55,.5);}
+.die.pop{animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+.status{text-align:center;font-size:.95rem}
+.turnwho{color:var(--gold-bright);font-family:'Cinzel',Georgia,serif}
+.result-banner{text-align:center;border:2px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;animation:popIn .5s ease both}
+.result-banner.lose{border-color:var(--red-bright);box-shadow:0 0 20px rgba(226,84,63,.35) inset;animation:popIn .5s ease both, shake .5s ease .1s}
+.result-banner.lose .result-title{color:var(--red-bright);text-shadow:0 0 12px rgba(226,84,63,.6)}
+.result-banner.win{border-color:var(--gold);animation:popIn .5s ease both, goldPulse 1.8s ease-in-out infinite}
+.result-title{font-family:'Cinzel',Georgia,serif;font-size:1.25rem;letter-spacing:.5px}
+.result-sub{color:var(--muted);margin-top:4px;font-size:.9rem}
+.log{max-height:110px;overflow-y:auto;font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:10px}
+.hint{font-size:.76rem;color:var(--muted);text-align:center;margin-top:6px}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+@keyframes goldPulse{0%,100%{box-shadow:0 0 8px rgba(212,175,55,.4) inset}50%{box-shadow:0 0 22px rgba(212,175,55,.8) inset}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const app=document.getElementById('app');
+const enc=s=>btoa(unescape(encodeURIComponent(JSON.stringify(s))));
+const dec=c=>JSON.parse(decodeURIComponent(escape(atob(c))));
+const CREST=`<svg width="40" height="40" viewBox="0 0 40 40"><g fill="none" stroke="var(--gold)" stroke-width="1.6"><path d="M20 4l4 6-4 6-4-6z"/><path d="M6 20l6-4 6 4-6 4z"/><path d="M20 36l-4-6 4-6 4 6z"/><path d="M34 20l-6 4-6-4 6-4z"/><circle cx="20" cy="20" r="4"/></g></svg>`;
+
+function h(inner){ app.innerHTML=`<div class="crest">${CREST}</div><h1>Love, Death &amp; Roll</h1>${inner}`; }
+
+// --- sound design (synthesized, no audio files) ---
+let actx;
+function audioCtx(){
+  if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended') actx.resume();
+  return actx;
+}
+function tone(freq,dur,type,delay,vol){
+  try{
+    const ctx=audioCtx(), t0=ctx.currentTime+delay;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type=type; osc.frequency.setValueAtTime(freq,t0);
+    gain.gain.setValueAtTime(0,t0);
+    gain.gain.linearRampToValueAtTime(vol,t0+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+dur+0.03);
+  }catch(e){}
+}
+function sfxTick(){ tone(500+Math.random()*300,0.045,'square',0,0.05); }
+function sfxWin(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,0.35,'triangle',i*0.09,0.2)); } // level-up style fanfare
+function sfxLose(){ tone(220,0.5,'sawtooth',0,0.15); tone(174.6,0.55,'sawtooth',0.12,0.15); tone(110,0.8,'sine',0.26,0.2); }
+
+function shareBlock(state){
+  const code=enc(state);
+  const link=location.origin+location.pathname+'#s='+code;
+  return `
+    <div class="hint">Envoyez ce lien (ou ce code) à <b>${state.players[state.turnIndex]||'votre adversaire'}</b> :</div>
+    <textarea id="linkOut" rows="2" readonly>${link}</textarea>
+    <button id="copyLink" class="secondary">Copier le lien</button>
+    <textarea id="codeOut" rows="2" readonly>${code}</textarea>
+    <button id="copyCode" class="secondary">Copier juste le code</button>
+  `;
+}
+function wireShare(){
+  const cl=document.getElementById('copyLink'), cc=document.getElementById('copyCode');
+  if(cl) cl.onclick=()=>copyText(document.getElementById('linkOut').value,cl);
+  if(cc) cc.onclick=()=>copyText(document.getElementById('codeOut').value,cc);
+}
+function copyText(t,btn){
+  navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='Copié !';setTimeout(()=>btn.textContent=o,1200);}).catch(()=>{});
+}
+
+function screenHome(err){
+  h(`
+    <div class="sub">Un duel de dés à l'ancienne — le premier qui tombe sur 1 perd la mise.</div>
+    <div class="panel">
+      <b style="font-family:'Cinzel',Georgia,serif">Forger un duel</b>
+      <label>Votre nom</label><input id="p1" placeholder="Joueur 1">
+      <label>Nom de l'adversaire</label><input id="p2" placeholder="Joueur 2">
+      <label>Mise de départ (or)</label><input id="stake" type="number" value="100" min="1">
+      <label>Facettes du dé</label>
+      <select id="faces">
+        <option value="100">100</option><option value="1000">1 000</option>
+        <option value="10000" selected>10 000</option>
+        <option value="100000">100 000</option><option value="500000">500 000</option>
+      </select>
+      <button id="create">Lancer le duel</button>
+    </div>
+    <div class="panel">
+      <b style="font-family:'Cinzel',Georgia,serif">J'ai reçu un code</b>
+      <label>Collez le code reçu</label><textarea id="codeIn" rows="2" placeholder="Collez ici…"></textarea>
+      <button id="load" class="secondary">Charger la partie</button>
+      ${err?`<div class="sub" style="color:var(--red-bright);font-style:normal">${err}</div>`:''}
+    </div>
+  `);
+  document.getElementById('create').onclick=()=>{
+    const p1=document.getElementById('p1').value.trim()||'Joueur 1';
+    const p2=document.getElementById('p2').value.trim()||'Joueur 2';
+    const stake=Math.max(1,parseInt(document.getElementById('stake').value)||100);
+    const faces=parseInt(document.getElementById('faces').value);
+    renderGame({players:[p1,p2],stake,diceMax:faces,currentMax:faces,turnIndex:0,lastRoll:null,status:'playing',loserIndex:null,log:[]});
+  };
+  document.getElementById('load').onclick=()=>{
+    try{ renderGame(dec(document.getElementById('codeIn').value.trim())); }
+    catch(e){ screenHome('Code illisible — vérifiez le collage.'); }
+  };
+}
+
+function renderGame(s){
+  let banner='';
+  if(s.status==='finished'){
+    const loser=s.players[s.loserIndex], winner=s.players[1-s.loserIndex];
+    banner=`<div class="result-banner lose">
+      <div class="result-title">💀 ${loser} tombe sur 1</div>
+      <div class="result-sub">${winner} remporte ${s.stake} or</div>
+    </div>`;
+  }
+  h(`
+    <div class="panel">
+      ${banner}
+      <div class="names"><span><b>${s.players[0]}</b></span><span>⚔</span><span><b>${s.players[1]}</b></span></div>
+      <div class="status">Mise en jeu : <b>${s.stake} or</b></div>
+      <div class="die" id="dieVal">${s.lastRoll??'—'}</div>
+      <div class="status">${s.status==='finished'?'Le duel est achevé.':`Dé actuel : sur ${s.currentMax.toLocaleString('fr-FR')} — au tour de <span class="turnwho">${s.players[s.turnIndex]}</span>`}</div>
+      ${s.status==='playing'?`<button id="roll">Lancer le dé</button>`:''}
+      ${s.log&&s.log.length?`<div class="log">${s.log.slice().reverse().map(l=>`<div>${l}</div>`).join('')}</div>`:''}
+    </div>
+    <div class="panel">${s.status==='finished'?`<button id="again">Nouveau duel (même mise)</button>`:shareBlock(s)}</div>
+  `);
+  if(s.status==='playing'){
+    wireShare();
+    document.getElementById('roll').onclick=()=>rollDice(s);
+  } else {
+    document.getElementById('again').onclick=()=>{
+      renderGame({...s,currentMax:s.diceMax,lastRoll:null,status:'playing',loserIndex:null,turnIndex:0,log:[]});
+    };
+  }
+}
+
+function rollDice(s){
+  const btn=document.getElementById('roll'), die=document.getElementById('dieVal');
+  btn.disabled=true;
+  audioCtx();
+  const iv=setInterval(()=>{ die.textContent=1+Math.floor(Math.random()*s.currentMax); sfxTick(); },55);
+  setTimeout(()=>{
+    clearInterval(iv);
+    die.classList.add('pop');
+    const roll=1+Math.floor(Math.random()*s.currentMax);
+    const label=s.players[s.turnIndex];
+    const ns={...s,lastRoll:roll,log:(s.log||[]).concat(`${label} : ${roll}`).slice(-8)};
+    if(roll===1){ ns.status='finished'; ns.loserIndex=s.turnIndex; sfxLose(); }
+    else { ns.currentMax=roll; ns.turnIndex=1-s.turnIndex; sfxWin(); }
+    setTimeout(()=>renderGame(ns),500);
+  },600);
+}
+
+(function init(){
+  const m=location.hash.match(/#s=(.+)/);
+  if(m){ try{ renderGame(dec(decodeURIComponent(m[1]))); return; }catch(e){} }
+  screenHome();
+})();
+</script>
+</body>
+</html>
