@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Love, Death & Roll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#120d08; --panel:#1c140c; --panel2:#241a10; --text:#e9dcc0; --muted:#a5906b;
+  --gold:#d4af37; --gold-bright:#f4d675; --border:#5a441f; --red:#8c2a2a; --red-bright:#e2543f; --green:#4c9a4c;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f2ead9; --panel:#fbf5e6; --panel2:#f1e6cc; --text:#2a1f10; --muted:#7a6440;
+    --gold:#a9791a; --gold-bright:#8a6408; --border:#c9b177; --red:#7a1f1f; --red-bright:#a12a2a; --green:#3a6b35; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'EB Garamond',Georgia,serif;display:flex;justify-content:center;
+  background-image:radial-gradient(ellipse at top,rgba(212,175,55,.08),transparent 60%);}
+#app{width:100%;max-width:480px;padding:22px 16px 36px;display:flex;flex-direction:column;gap:16px}
+.crest{display:flex;justify-content:center;margin-top:4px}
+h1{font-family:'Cinzel',Georgia,serif;font-size:1.5rem;text-align:center;margin:2px 0 0;letter-spacing:1px;
+  color:var(--gold-bright);text-shadow:0 0 14px rgba(212,175,55,.45);}
+.sub{text-align:center;color:var(--muted);font-size:.85rem;margin-top:-6px;font-style:italic}
+.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:2px solid var(--border);border-radius:10px;
+  padding:18px;box-shadow:0 0 0 1px rgba(212,175,55,.15) inset,0 8px 20px rgba(0,0,0,.35);
+  animation:fadeSlide .35s ease both;}
+label{display:block;font-family:'Cinzel',Georgia,serif;font-size:.72rem;letter-spacing:.6px;color:var(--muted);margin:12px 0 5px;text-transform:uppercase}
+input,select,textarea{width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,.25);color:var(--text);font-size:1rem;font-family:'EB Garamond',Georgia,serif}
+textarea{resize:vertical;font-family:monospace;font-size:.72rem}
+button{width:100%;padding:12px;border-radius:6px;border:1px solid var(--gold);
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#241a10;font-weight:700;
+  font-family:'Cinzel',Georgia,serif;letter-spacing:.5px;text-transform:uppercase;font-size:.9rem;cursor:pointer;margin-top:12px;
+  transition:transform .1s ease, box-shadow .2s ease;}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.4;cursor:default}
+button.secondary{background:transparent;color:var(--gold-bright);box-shadow:none}
+.names{display:flex;justify-content:space-between;font-family:'Cinzel',Georgia,serif;font-size:.85rem;color:var(--muted)}
+.names b{color:var(--text)}
+.die{text-align:center;font-family:'Cinzel',Georgia,serif;font-size:3rem;font-weight:700;color:var(--gold-bright);
+  margin:8px 0;text-shadow:0 0 10px rgba(212,175,55,.5);}
+.die.pop{animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+.status{text-align:center;font-size:.95rem}
+.turnwho{color:var(--gold-bright);font-family:'Cinzel',Georgia,serif}
+.result-banner{text-align:center;border:2px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;animation:popIn .5s ease both}
+.result-banner.lose{border-color:var(--red-bright);box-shadow:0 0 20px rgba(226,84,63,.35) inset;animation:popIn .5s ease both, shake .5s ease .1s}
+.result-banner.lose .result-title{color:var(--red-bright);text-shadow:0 0 12px rgba(226,84,63,.6)}
+.result-banner.win{border-color:var(--gold);animation:popIn .5s ease both, goldPulse 1.8s ease-in-out infinite}
+.result-title{font-family:'Cinzel',Georgia,serif;font-size:1.25rem;letter-spacing:.5px}
+.result-sub{color:var(--muted);margin-top:4px;font-size:.9rem}
+.log{max-height:110px;overflow-y:auto;font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:10px}
+.hint{font-size:.76rem;color:var(--muted);text-align:center;margin-top:6px}
+.rollbox{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-top:10px}
+.rollbox .prompt{color:var(--gold);font-family:monospace;font-weight:700}
+.rollbox input{border:none;background:transparent;padding:0;font-family:monospace;font-size:.95rem}
+.rollbox input:focus{outline:none}
+.err-msg{min-height:1em;color:var(--red-bright);font-size:.78rem;text-align:center;margin-top:4px}
+.roomcode{text-align:center;font-family:'Cinzel',Georgia,serif;font-size:2rem;letter-spacing:.3em;color:var(--gold-bright);
+  margin:8px 0;text-shadow:0 0 10px rgba(212,175,55,.5);}
+.footlink{background:none;border:none;color:var(--muted);text-decoration:underline;font-family:'EB Garamond',Georgia,serif;
+  text-transform:none;letter-spacing:0;font-size:.8rem;width:auto;padding:0;margin-top:14px;display:block;margin-left:auto;margin-right:auto}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+@keyframes goldPulse{0%,100%{box-shadow:0 0 8px rgba(212,175,55,.4) inset}50%{box-shadow:0 0 22px rgba(212,175,55,.8) inset}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ====== 1) CONFIGURATION FIREBASE — À REMPLIR PAR VOUS (voir instructions) ====== */
+const FIREBASE_CONFIG = {
+  apiKey: "REMPLACEZ_MOI",
+  authDomain: "REMPLACEZ_MOI.firebaseapp.com",
+  databaseURL: "https://REMPLACEZ_MOI-default-rtdb.firebaseio.com",
+  projectId: "REMPLACEZ_MOI"
+};
+let db=null, fbReady=false;
+try{
+  if(FIREBASE_CONFIG.apiKey!=="REMPLACEZ_MOI"){
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.database();
+    fbReady=true;
+  }
+}catch(e){}
+
+const app=document.getElementById('app');
+let myIndex=null, myRoom=null, roomRef=null;
+
+function h(inner){ app.innerHTML=`<div class="crest">${CREST}</div><h1>Love, Death &amp; Roll</h1>${inner}`; }
+const CREST=`<svg width="40" height="40" viewBox="0 0 40 40"><g fill="none" stroke="var(--gold)" stroke-width="1.6"><path d="M20 4l4 6-4 6-4-6z"/><path d="M6 20l6-4 6 4-6 4z"/><path d="M20 36l-4-6 4-6 4 6z"/><path d="M34 20l-6 4-6-4 6-4z"/><circle cx="20" cy="20" r="4"/></g></svg>`;
+function genCode(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
+
+// --- sound design (synthesized, no audio files) ---
+let actx;
+function audioCtx(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }
+function tone(freq,dur,type,delay,vol){
+  try{
+    const ctx=audioCtx(), t0=ctx.currentTime+delay;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type=type; osc.frequency.setValueAtTime(freq,t0);
+    gain.gain.setValueAtTime(0,t0);
+    gain.gain.linearRampToValueAtTime(vol,t0+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+dur+0.03);
+  }catch(e){}
+}
+function sfxTick(){ tone(500+Math.random()*300,0.045,'square',0,0.05); }
+function sfxWin(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,0.35,'triangle',i*0.09,0.2)); }
+function sfxLose(){ tone(220,0.5,'sawtooth',0,0.15); tone(174.6,0.55,'sawtooth',0.12,0.15); tone(110,0.8,'sine',0.26,0.2); }
+
+function saveSession(){ try{ localStorage.setItem('ldr_session', JSON.stringify({room:myRoom,index:myIndex})); }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem('ldr_session'); }catch(e){} }
+
+function screenHome(err){
+  if(!fbReady){
+    h(`<div class="panel"><div class="hint" style="color:var(--red-bright)">
+      La configuration Firebase n'a pas encore été renseignée dans ce fichier (voir les commentaires en haut du script).
+      Sans ça, la synchronisation automatique ne peut pas fonctionner.
+    </div></div>`);
+    return;
+  }
+  h(`
+    <div class="sub">Un duel de dés à l'ancienne — le premier qui tombe sur 1 perd la mise. Tout se synchronise automatiquement une fois dans la partie.</div>
+    <div class="panel">
+      <b style="font-family:'Cinzel',Georgia,serif">Forger un duel</b>
+      <label>Votre nom</label><input id="p1" placeholder="Joueur 1">
+      <label>Mise de départ (or)</label><input id="stake" type="number" value="100" min="1" max="100000">
+      <div class="hint" style="margin-top:-6px">Chaque joueur part avec une bourse de 100 000 or.</div>
+      <label>Facettes du dé</label>
+      <select id="faces">
+        <option value="100">100</option><option value="1000">1 000</option>
+        <option value="10000" selected>10 000</option>
+        <option value="100000">100 000</option><option value="500000">500 000</option>
+      </select>
+      <button id="create">Créer la partie</button>
+    </div>
+    <div class="panel">
+      <b style="font-family:'Cinzel',Georgia,serif">Rejoindre un duel</b>
+      <label>Votre nom</label><input id="p2" placeholder="Joueur 2">
+      <label>Code de la partie</label><input id="joinCode" placeholder="Ex. AB12CD" style="text-transform:uppercase">
+      <button id="join" class="secondary">Rejoindre</button>
+      ${err?`<div class="hint" style="color:var(--red-bright)">${err}</div>`:''}
+    </div>
+  `);
+  document.getElementById('create').onclick=async()=>{
+    const p1=document.getElementById('p1').value.trim()||'Joueur 1';
+    const stake=Math.min(100000,Math.max(1,parseInt(document.getElementById('stake').value)||100));
+    const faces=parseInt(document.getElementById('faces').value);
+    const code=genCode();
+    const state={players:[p1,'En attente…'],stake,diceMax:faces,currentMax:faces,turnIndex:0,lastRoll:null,status:'waiting',loserIndex:null,log:[],purses:[100000,100000]};
+    try{
+      await db.ref('games/'+code).set(state);
+      myIndex=0; myRoom=code; saveSession();
+      listenRoom(code);
+    }catch(e){ screenHome("Erreur de connexion à la base — vérifiez la configuration Firebase."); }
+  };
+  document.getElementById('join').onclick=async()=>{
+    const p2=document.getElementById('p2').value.trim()||'Joueur 2';
+    const code=document.getElementById('joinCode').value.trim().toUpperCase();
+    if(!code){ screenHome('Entrez un code de partie.'); return; }
+    try{
+      const snap=await db.ref('games/'+code).once('value');
+      const state=snap.val();
+      if(!state){ screenHome('Code introuvable — vérifiez-le avec votre adversaire.'); return; }
+      myIndex=1; myRoom=code; saveSession();
+      if(state.status==='waiting'){
+        await db.ref('games/'+code).update({status:'playing','players/1':p2});
+      }
+      listenRoom(code);
+    }catch(e){ screenHome("Erreur de connexion à la base — vérifiez la configuration Firebase."); }
+  };
+}
+
+function listenRoom(code){
+  if(roomRef) roomRef.off();
+  roomRef=db.ref('games/'+code);
+  roomRef.on('value',snap=>{
+    const st=snap.val();
+    if(st) renderGame(st);
+    else { clearSession(); screenHome('Cette partie a été supprimée.'); }
+  });
+}
+
+function renderGame(s){
+  let banner='';
+  if(s.status==='finished'){
+    const loser=s.players[s.loserIndex], winner=s.players[1-s.loserIndex];
+    banner=`<div class="result-banner lose">
+      <div class="result-title">💀 ${loser} tombe sur 1</div>
+      <div class="result-sub">${winner} remporte ${s.stake} or — ${loser} : -${s.stake} or, ${winner} : +${s.stake} or</div>
+    </div>`;
+  }
+  let mainAction='';
+  if(s.status==='waiting'){
+    mainAction=`<div class="roomcode">${myRoom}</div><div class="hint">Partagez ce code avec votre adversaire pour qu'il/elle rejoigne. La page se mettra à jour automatiquement.</div>`;
+  } else if(s.status==='playing'){
+    mainAction = (myIndex===s.turnIndex)?`
+      <div class="rollbox"><span class="prompt">&gt;</span><input id="rollInput" type="text" placeholder="/roll ${s.currentMax}" autocomplete="off" spellcheck="false"></div>
+      <div id="rollErr" class="err-msg"></div>
+      <button id="sendRoll">Envoyer</button>
+    `:`<div class="hint">En attente de <b>${s.players[s.turnIndex]}</b>…</div>`;
+  }
+  h(`
+    <div class="panel">
+      ${banner}
+      <div class="names"><span><b>${s.players[0]}</b>${s.status!=='waiting'?`<br><small>${s.purses[0].toLocaleString('fr-FR')} or</small>`:''}</span><span>⚔</span><span><b>${s.players[1]}</b>${s.status!=='waiting'?`<br><small>${s.purses[1].toLocaleString('fr-FR')} or</small>`:''}</span></div>
+      ${s.status!=='waiting'?`<div class="status">Mise en jeu : <b>${s.stake} or</b></div><div class="die" id="dieVal">${s.lastRoll??'—'}</div>`:''}
+      <div class="status">${s.status==='finished'?'Le duel est achevé.':(s.status==='playing'?`Dé actuel : sur ${s.currentMax.toLocaleString('fr-FR')} — au tour de <span class="turnwho">${s.players[s.turnIndex]}</span>`:'')}</div>
+      ${mainAction}
+      ${s.log&&s.log.length?`<div class="log">${s.log.slice().reverse().map(l=>`<div>${l}</div>`).join('')}</div>`:''}
+    </div>
+    <div class="panel">
+      ${s.status==='finished'?`
+        ${(s.purses[0]>=s.stake&&s.purses[1]>=s.stake)?`<button id="again">Nouveau duel (même mise)</button>`:`<div class="hint">Fonds insuffisants pour rejouer à ${s.stake} or.</div>`}
+        <button id="reset" class="secondary">Recommencer (bourses à 100 000 or)</button>
+      `:`<div class="hint">Code de la partie : <b>${myRoom}</b></div>`}
+      <button id="leave" class="footlink">Quitter cette partie</button>
+    </div>
+  `);
+  document.getElementById('leave').onclick=()=>{
+    if(roomRef) roomRef.off();
+    roomRef=null; myRoom=null; myIndex=null; clearSession();
+    screenHome();
+  };
+  if(s.status==='playing' && myIndex===s.turnIndex){
+    const input=document.getElementById('rollInput'), send=document.getElementById('sendRoll'), err=document.getElementById('rollErr');
+    const submit=()=>{
+      const m=input.value.trim().match(/^\/roll(?:\s+(\d+))?$/i);
+      if(!m){ err.textContent=`Tapez exactement /roll ${s.currentMax} (ou juste /roll).`; return; }
+      if(m[1]!==undefined && parseInt(m[1],10)!==s.currentMax){ err.textContent=`Le nombre doit être ${s.currentMax}, le plafond actuel.`; return; }
+      err.textContent=''; input.disabled=true; send.disabled=true;
+      rollDice(s);
+    };
+    send.onclick=submit;
+    input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
+    input.focus();
+  }
+  if(s.status==='finished'){
+    const again=document.getElementById('again');
+    if(again) again.onclick=()=>{
+      roomRef.set({...s,currentMax:s.diceMax,lastRoll:null,status:'playing',loserIndex:null,turnIndex:0,log:[]});
+    };
+    document.getElementById('reset').onclick=()=>{
+      roomRef.set({...s,purses:[100000,100000],currentMax:s.diceMax,lastRoll:null,status:'playing',loserIndex:null,turnIndex:0,log:[]});
+    };
+  }
+}
+
+function rollDice(s){
+  const die=document.getElementById('dieVal');
+  audioCtx();
+  const roll=1+Math.floor(Math.random()*s.currentMax);
+  const iv=setInterval(()=>{ die.textContent=1+Math.floor(Math.random()*s.currentMax); sfxTick(); },55);
+  setTimeout(()=>{
+    clearInterval(iv);
+    die.textContent=roll;
+    die.classList.add('pop');
+    const label=s.players[s.turnIndex];
+    const ns={...s,lastRoll:roll,log:(s.log||[]).concat(`${label} tape /roll ${s.currentMax} → ${roll}`).slice(-8)};
+    if(roll===1){
+      ns.status='finished'; ns.loserIndex=s.turnIndex; sfxLose();
+      const np=[...s.purses]; np[s.turnIndex]-=s.stake; np[1-s.turnIndex]+=s.stake; ns.purses=np;
+    } else { ns.currentMax=roll; ns.turnIndex=1-s.turnIndex; sfxWin(); }
+    setTimeout(()=>{ roomRef.set(ns); },400);
+  },600);
+}
+
+(function init(){
+  let saved=null;
+  try{ saved=JSON.parse(localStorage.getItem('ldr_session')||'null'); }catch(e){}
+  if(fbReady && saved && saved.room){ myRoom=saved.room; myIndex=saved.index; listenRoom(saved.room); return; }
+  screenHome();
+})();
+</script>
+</body>
+</html>
